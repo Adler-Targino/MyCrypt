@@ -15,9 +15,33 @@ namespace MyCrypt.Services
             _rngService = rngService;
         }
 
-        public byte[] DecryptFile(byte[] content, byte[] key)
+        public void DecryptFile(Stream input, Stream output, byte[] key)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    input.Seek(4, SeekOrigin.Current);
+
+                    int extLength = input.ReadByte();
+                    input.Seek(extLength, SeekOrigin.Current);
+
+                    byte[] iv = new byte[aes.BlockSize / 8];
+                    input.ReadExactly(iv);
+
+                    aes.Key = key;
+                    aes.IV = iv;
+
+                    using var crypto = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+
+                    crypto.CopyTo(output);
+                }
+
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine($"Decryption failed. {ex}");
+            }
         }
 
         public void EncryptFile(Stream input, Stream output, byte[] key, string extension)
