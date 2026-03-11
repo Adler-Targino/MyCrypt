@@ -7,7 +7,7 @@ namespace MyCrypt.Interfaces
     internal interface IAesUtilService
     {
         byte[] GenerateRandomKey();
-        void EncryptFile(Stream input, Stream output, byte[] key);
+        void EncryptFile(Stream input, Stream output, byte[] key, string extension);
         byte[] DecryptFile(byte[] content, byte[] key);
     }
 }

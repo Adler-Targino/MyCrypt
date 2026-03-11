@@ -2,6 +2,7 @@
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
+using System.Text;
 
 namespace MyCrypt.Commands.Encrypt
 {
@@ -61,8 +62,9 @@ namespace MyCrypt.Commands.Encrypt
                 throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
             }
 
+            string inputExtension = settings.Input.Extension;
             using var input = settings.Input.OpenRead();
-            
+
             string outputFilename = !string.IsNullOrWhiteSpace(settings.Output) ?
                                     Path.IsPathRooted(settings.Output) ?
                                     Path.ChangeExtension(settings.Output, ".myc") :
@@ -84,7 +86,7 @@ namespace MyCrypt.Commands.Encrypt
                 .Spinner(Spinner.Known.Dots)
                 .Start("Encrypting file...", async ctx =>
                 {
-                    _aesUtilService.EncryptFile(input, output, key);
+                    _aesUtilService.EncryptFile(input, output, key, inputExtension);
                 });
 
             input.Close();

@@ -20,10 +20,16 @@ namespace MyCrypt.Services
             throw new NotImplementedException();
         }
 
-        public void EncryptFile(Stream input, Stream output, byte[] key)
+        public void EncryptFile(Stream input, Stream output, byte[] key, string extension)
         {
             try
             {
+                var extBytes = Encoding.UTF8.GetBytes(extension);
+
+                output.Write(Encoding.ASCII.GetBytes("MYCR"));
+                output.WriteByte((byte)extBytes.Length);
+                output.Write(extBytes); 
+
                 using (Aes aes = Aes.Create())
                 {
                     aes.Key = key;
