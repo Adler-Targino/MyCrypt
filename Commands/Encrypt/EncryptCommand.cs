@@ -1,4 +1,5 @@
 ﻿using MyCrypt.Interfaces;
+using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
@@ -51,15 +52,7 @@ namespace MyCrypt.Commands.Encrypt
             }
 
             string inputExtension = settings.Input.Extension;
-            using var input = settings.Input.OpenRead();
-
-            string outputFilename = !string.IsNullOrWhiteSpace(settings.Output) ?
-                                    Path.IsPathRooted(settings.Output) ?
-                                    Path.ChangeExtension(settings.Output, ".myc") :
-                                    Path.ChangeExtension(
-                                        Path.Combine(Directory.GetCurrentDirectory(), settings.Output), 
-                                        ".myc") :
-                                    Path.ChangeExtension(settings.Input.FullName, ".myc");
+            string outputFilename = PathResolverService.ResolveEncryptedFileName(settings.Input, settings.Output);
             
             if (File.Exists(outputFilename))
             {
@@ -69,13 +62,15 @@ namespace MyCrypt.Commands.Encrypt
                 }
             }
 
+            using var input = settings.Input.OpenRead();
             using var output = File.Create(outputFilename);
+
             AnsiConsole.Status()
-                .Spinner(Spinner.Known.Dots)
-                .Start("Encrypting file...", async ctx =>
-                {
-                    _aesUtilService.EncryptFile(input, output, key, inputExtension);
-                });
+                       .Spinner(Spinner.Known.Dots)
+                       .Start("Encrypting file...", async ctx =>
+                       {
+                           _aesUtilService.EncryptFile(input, output, key, inputExtension);
+                       });
 
             input.Close();
             output.Close();
