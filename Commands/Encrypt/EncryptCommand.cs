@@ -9,7 +9,6 @@ namespace MyCrypt.Commands.Encrypt
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
         private readonly IAesUtilService _aesUtilService;
-        private static readonly int[] AesValidKeySizes = { 16, 24, 32 };
         public EncryptCommand(IAesUtilService aesUtilService)
         {
             _aesUtilService = aesUtilService;
@@ -32,17 +31,6 @@ namespace MyCrypt.Commands.Encrypt
             [CommandOption("-d|--delete")]
             [Description("Deletes the original file after encryption.")]
             public bool DeleteOriginal { get; init; }
-
-            public override ValidationResult Validate()
-            {
-                if (Key.IsSet && !AesValidKeySizes.Contains(Key.Value.Length))
-                {
-                    return ValidationResult.Error(
-                        "Invalid AES Key. The key length must be 16, 24 or 32 characters.");
-                }
-
-                return ValidationResult.Success();
-            }
         }
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
@@ -54,7 +42,7 @@ namespace MyCrypt.Commands.Encrypt
             }
             else
             {
-                key = Convert.FromBase64String(settings.Key.Value);
+                key = _aesUtilService.ParseKey(settings.Key.Value);
             }
 
             if (!settings.Input.Exists)

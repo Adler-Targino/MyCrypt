@@ -9,7 +9,7 @@ namespace MyCrypt.Services
     internal class AesUtilService : IAesUtilService
     {
         private readonly IRngService _rngService;
-
+        private static readonly int[] AesValidKeySizes = { 16, 24, 32 };
         public AesUtilService(IRngService rngService)
         {
             _rngService = rngService;
@@ -51,6 +51,19 @@ namespace MyCrypt.Services
         public byte[] GenerateRandomKey()
         {
             return _rngService.GenerateRandomBytes(32);
+        }
+
+        public byte[] ParseKey(string key)
+        {
+            if (AesValidKeySizes.Contains(key.Length))
+            {
+                return Convert.FromBase64String(key);
+            }
+            else
+            {
+                using var sha = SHA256.Create();
+                return sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+            }
         }
     }
 }
