@@ -2,6 +2,7 @@
 using MyCrypt.Commands;
 using MyCrypt.Infrastructure;
 using Spectre.Console.Cli;
+using System.Reflection;
 
 var services = new ServiceCollection()
                     .AddMyCrypt();
@@ -11,13 +12,18 @@ var app = new CommandApp(registrar);
 
 app.Configure(config =>
 {
+    config.SetApplicationName("mycrypt");
+    config.SetApplicationVersion($"{Assembly.GetEntryAssembly()?.GetName().Version}");
+
     config.AddCommand<EncryptCommand>("encrypt");
     config.AddCommand<DecryptCommand>("decrypt");
 
     config.AddBranch("validation", validation =>
     {
-        validation.AddCommand<ValidateCommand>("validate");
-        validation.AddCommand<ComputeCommand>("compute");
+        validation.SetDescription("Commands related to file integrity verification using hashes.");
+
+        validation.AddCommand<VerifyCommand>("verify");
+        validation.AddCommand<ComputeHashCommand>("compute-hash");
     });
 });
 

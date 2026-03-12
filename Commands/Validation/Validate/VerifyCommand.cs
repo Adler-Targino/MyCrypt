@@ -6,9 +6,10 @@ using System.Text;
 
 namespace MyCrypt.Commands
 {
-    internal class ValidateCommand : Command<ValidateCommand.Settings>
+    [Description("Validates a file integrity using its hash.")]
+    internal class VerifyCommand : Command<VerifyCommand.Settings>
     {
-        public ValidateCommand() { }
+        public VerifyCommand() { }
 
         public class Settings : CommandSettings
         {

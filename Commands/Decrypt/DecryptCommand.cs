@@ -6,6 +6,7 @@ using System.ComponentModel;
 
 namespace MyCrypt.Commands
 {
+    [Description("Decrypts a previously encrypted .myc file.")]
     internal class DecryptCommand : Command<DecryptCommand.Settings>
     {
         private readonly IAesUtilService _aesUtilService;

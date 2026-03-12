@@ -7,6 +7,7 @@ using System.Text;
 
 namespace MyCrypt.Commands
 {
+    [Description("Encrypts a file using a cryptographic key.")]
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
         private readonly IAesUtilService _aesUtilService;

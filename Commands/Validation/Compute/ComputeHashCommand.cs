@@ -5,9 +5,10 @@ using System.ComponentModel;
 
 namespace MyCrypt.Commands
 {
-    internal class ComputeCommand : Command<ComputeCommand.Settings>
+    [Description("Computes the cryptographic hash of a file for integrity verification.")]
+    internal class ComputeHashCommand : Command<ComputeHashCommand.Settings>
     {
-        public ComputeCommand() { }
+        public ComputeHashCommand() { }
 
         public class Settings : CommandSettings
         {
