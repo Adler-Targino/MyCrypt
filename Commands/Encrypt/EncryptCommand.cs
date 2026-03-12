@@ -80,7 +80,10 @@ namespace MyCrypt.Commands
             {
                 settings.Input.Delete();
             }
-            AnsiConsole.MarkupLine($"File encrypted sucessfully with key: [yellow]{Convert.ToBase64String(key)}[/]");
+
+            AnsiConsole.MarkupLine($"File encrypted sucessfully with key: [yellow]" +
+                $"{(settings.Key.IsSet ? settings.Key.Value : Convert.ToBase64String(key))}[/]");
+
             return 0;
         }
     }
