@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
-namespace MyCrypt.Commands.Key.Create
+namespace MyCrypt.Commands
 {
     internal class CreateCommand : Command<CreateCommand.Settings>
     {

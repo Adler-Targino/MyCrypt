@@ -4,7 +4,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 
-namespace MyCrypt.Commands.Decrypt
+namespace MyCrypt.Commands
 {
     internal class DecryptCommand : Command<DecryptCommand.Settings>
     {

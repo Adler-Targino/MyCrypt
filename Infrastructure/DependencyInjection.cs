@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using MyCrypt.Commands.Encrypt;
+using MyCrypt.Commands;
 using MyCrypt.Interfaces;
 using MyCrypt.Services;
 

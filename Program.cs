@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using MyCrypt.Commands.Decrypt;
-using MyCrypt.Commands.Encrypt;
+using MyCrypt.Commands;
 using MyCrypt.Infrastructure;
 using Spectre.Console.Cli;
 
@@ -14,6 +13,12 @@ app.Configure(config =>
 {
     config.AddCommand<EncryptCommand>("encrypt");
     config.AddCommand<DecryptCommand>("decrypt");
+
+    config.AddBranch("validation", validation =>
+    {
+        validation.AddCommand<ValidateCommand>("validate");
+        validation.AddCommand<ComputeCommand>("compute");
+    });
 });
 
 return app.Run(args);

@@ -5,7 +5,7 @@ using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Text;
 
-namespace MyCrypt.Commands.Encrypt
+namespace MyCrypt.Commands
 {
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
