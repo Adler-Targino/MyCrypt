@@ -25,6 +25,12 @@ app.Configure(config =>
         validation.AddCommand<VerifyCommand>("verify");
         validation.AddCommand<ComputeHashCommand>("compute-hash");
     });
+
+    config.AddBranch("key", key =>
+    {
+        key.SetDescription("Commands related to key generation and validation");
+
+    });
 });
 
 return app.Run(args);

@@ -63,18 +63,26 @@ namespace MyCrypt.Commands
                 }
             }
 
-            using var input = settings.Input.OpenRead();
-            using var output = File.Create(outputFilename);
+            try
+            {
+                using var input = settings.Input.OpenRead();
+                using var output = File.Create(outputFilename);
 
-            AnsiConsole.Status()
-                       .Spinner(Spinner.Known.Dots)
-                       .Start("Encrypting file...", async ctx =>
-                       {
-                           _aesUtilService.EncryptFile(input, output, key, inputExtension);
-                       });
+                AnsiConsole.Status()
+                           .Spinner(Spinner.Known.Dots)
+                           .Start("Encrypting file...", async ctx =>
+                           {
+                               _aesUtilService.EncryptFile(input, output, key, inputExtension);
+                           });
 
-            input.Close();
-            output.Close();
+                input.Close();
+                output.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Encryption failed. {ex}");
+                return 0;
+            }
 
             if (settings.DeleteOriginal) 
             {

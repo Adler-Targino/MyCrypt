@@ -17,58 +17,43 @@ namespace MyCrypt.Services
 
         public void DecryptFile(Stream input, Stream output, byte[] key)
         {
-            try
+            using (Aes aes = Aes.Create())
             {
-                using (Aes aes = Aes.Create())
-                {
-                    input.Seek(4, SeekOrigin.Current);
+                input.Seek(4, SeekOrigin.Current);
 
-                    int extLength = input.ReadByte();
-                    input.Seek(extLength, SeekOrigin.Current);
+                int extLength = input.ReadByte();
+                input.Seek(extLength, SeekOrigin.Current);
 
-                    byte[] iv = new byte[aes.BlockSize / 8];
-                    input.ReadExactly(iv);
+                byte[] iv = new byte[aes.BlockSize / 8];
+                input.ReadExactly(iv);
 
-                    aes.Key = key;
-                    aes.IV = iv;
+                aes.Key = key;
+                aes.IV = iv;
 
-                    using var crypto = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+                using var crypto = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
 
-                    crypto.CopyTo(output);
-                }
-
-            }
-            catch (Exception ex) 
-            {
-                Console.WriteLine($"Decryption failed. {ex}");
+                crypto.CopyTo(output);
             }
         }
 
         public void EncryptFile(Stream input, Stream output, byte[] key, string extension)
         {
-            try
+            var extBytes = Encoding.UTF8.GetBytes(extension);
+
+            output.Write(Encoding.ASCII.GetBytes("MYCR"));
+            output.WriteByte((byte)extBytes.Length);
+            output.Write(extBytes);
+
+            using (Aes aes = Aes.Create())
             {
-                var extBytes = Encoding.UTF8.GetBytes(extension);
+                aes.Key = key;
+                byte[] iv = aes.IV;
 
-                output.Write(Encoding.ASCII.GetBytes("MYCR"));
-                output.WriteByte((byte)extBytes.Length);
-                output.Write(extBytes); 
+                output.Write(iv, 0, iv.Length);
 
-                using (Aes aes = Aes.Create())
-                {
-                    aes.Key = key;
-                    byte[] iv = aes.IV;
+                using var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write);
 
-                    output.Write(iv, 0, iv.Length);
-
-                    using var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write);
-
-                    input.CopyTo(crypto);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Encryption failed. {ex}");
+                input.CopyTo(crypto);
             }
         }
 

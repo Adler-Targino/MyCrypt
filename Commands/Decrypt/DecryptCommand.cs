@@ -53,18 +53,26 @@ namespace MyCrypt.Commands
                 }
             }
 
-            using var input = settings.Input.OpenRead();
-            using var output = File.Create(outputFilename);
+            try
+            {
+                using var input = settings.Input.OpenRead();
+                using var output = File.Create(outputFilename);
 
-            AnsiConsole.Status()
-                       .Spinner(Spinner.Known.Dots)
-                       .Start("Decrypting file...", async ctx =>
-                       {
-                           _aesUtilService.DecryptFile(input, output, key);
-                       });
+                AnsiConsole.Status()
+                           .Spinner(Spinner.Known.Dots)
+                           .Start("Decrypting file...", async ctx =>
+                           {
+                               _aesUtilService.DecryptFile(input, output, key);
+                           });
 
-            input.Close();
-            output.Close();
+                input.Close();
+                output.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Decryption failed. {ex}");
+                return 0;
+            }
             
             if (settings.DeleteOriginal)
             {
