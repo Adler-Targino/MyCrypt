@@ -31,7 +31,7 @@ Once ran, a random 32 bytes (44 characters) long, random key is displayed at the
 
 **Options:**
 
-- `--key` Defines a key which will be used for encryption. (If not present, a random key is created to encrypt your file)
+- `-k|--key` Defines a key which will be used for encryption. (If not present, a random key is created to encrypt your file)
 - `-o|--output` Defines the output path of the encrypted file. (By default the output is in the same folder as the input file)
 - `-d|--delete` Deletes the original file after encryption.
 

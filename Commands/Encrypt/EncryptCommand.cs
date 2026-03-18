@@ -26,7 +26,7 @@ namespace MyCrypt.Commands
             [Description("Output path for encrypted file.")]
             public string? Output { get; init; }
 
-            [CommandOption("--key [STRING]")]
+            [CommandOption("-k|--key [STRING]")]
             [Description("Key used to encrypt the file. (Default: New random 32 bytes key)")]
             public required FlagValue<string> Key { get; init; }
 

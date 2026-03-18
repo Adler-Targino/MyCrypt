@@ -22,14 +22,16 @@ app.Configure(config =>
     {
         validation.SetDescription("Commands related to file integrity verification using hashes.");
 
-        validation.AddCommand<VerifyCommand>("verify");
-        validation.AddCommand<ComputeHashCommand>("compute-hash");
+        validation.AddCommand<VerifyCommand>("verify")
+                  .WithAlias("validate");
+
+        validation.AddCommand<ComputeHashCommand>("compute-hash")
+                  .WithAlias("hash");
     });
 
     config.AddBranch("key", key =>
     {
         key.SetDescription("Commands related to key generation and validation");
-
     });
 });
 
