@@ -32,6 +32,8 @@ app.Configure(config =>
     config.AddBranch("key", key =>
     {
         key.SetDescription("Commands related to key generation and validation");
+
+        key.AddCommand<GenerateCommand>("generate");
     });
 });
 

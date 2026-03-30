@@ -1,7 +1,8 @@
 {
   "profiles": {
     "MyCrypt": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "key generate"
     }
   }
 }

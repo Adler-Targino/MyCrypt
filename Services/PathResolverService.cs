@@ -44,5 +44,13 @@ namespace MyCrypt.Services
                                 extension) :
                            Path.ChangeExtension(input.FullName, extension);
         }
+        public static string ResolveKeyFileName(string output)
+        {
+            return Path.IsPathRooted(output) ?
+                   Path.ChangeExtension(output, ".myk") :
+                   Path.ChangeExtension(
+                       Path.Combine(Directory.GetCurrentDirectory(), output),
+                       ".myk");
+        }
     }
 }
