@@ -9,10 +9,10 @@ namespace MyCrypt.Commands
     [Description("Decrypts a previously encrypted .myc file.")]
     internal class DecryptCommand : Command<DecryptCommand.Settings>
     {
-        private readonly IAesUtilService _aesUtilService;
-        public DecryptCommand(IAesUtilService aesUtilService)
+        private readonly IEncryptionService _encryptionService;
+        public DecryptCommand(IEncryptionService encryptionService)
         {
-            _aesUtilService = aesUtilService;
+            _encryptionService = encryptionService;
         }
 
         public class Settings : CommandSettings
@@ -36,7 +36,16 @@ namespace MyCrypt.Commands
         }
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
-            byte[] key = _aesUtilService.ParseKey(settings.Key);            
+            byte[] key;
+
+            if (File.Exists(settings.Key))
+            {
+                key = KeyManagementService.ImportKey(settings.Key);
+            }
+            else
+            {
+                key = _encryptionService.ParseKey(settings.Key);
+            }
 
             if (!settings.Input.Exists)
             {
@@ -62,7 +71,7 @@ namespace MyCrypt.Commands
                            .Spinner(Spinner.Known.Dots)
                            .Start("Decrypting file...", async ctx =>
                            {
-                               _aesUtilService.DecryptFile(input, output, key);
+                               _encryptionService.DecryptFile(input, output, key);
                            });
 
                 input.Close();

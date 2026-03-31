@@ -10,11 +10,8 @@ namespace MyCrypt.Infrastructure
         public static IServiceCollection AddMyCrypt(this IServiceCollection services)
         {
             // services
-            services.AddSingleton<IAesUtilService, AesUtilService>();
+            services.AddSingleton<IEncryptionService, AesUtilService>();
             services.AddSingleton<IRngService, RngService>();
-
-            // commands
-            services.AddSingleton<EncryptCommand>();
 
             return services;
         }

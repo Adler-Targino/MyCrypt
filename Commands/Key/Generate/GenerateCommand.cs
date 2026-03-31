@@ -8,8 +8,8 @@ namespace MyCrypt.Commands
 {
     internal class GenerateCommand : Command<GenerateCommand.Settings>
     {
-        private readonly IAesUtilService _aesUtilService;
-        public GenerateCommand(IAesUtilService aesUtilService)
+        private readonly IEncryptionService _aesUtilService;
+        public GenerateCommand(IEncryptionService aesUtilService)
         {
             _aesUtilService = aesUtilService;
         }

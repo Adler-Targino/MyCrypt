@@ -10,10 +10,10 @@ namespace MyCrypt.Commands
     [Description("Encrypts a file using a cryptographic key.")]
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
-        private readonly IAesUtilService _aesUtilService;
-        public EncryptCommand(IAesUtilService aesUtilService)
+        private readonly IEncryptionService _encryptionService;
+        public EncryptCommand(IEncryptionService encryptionService)
         {
-            _aesUtilService = aesUtilService;
+            _encryptionService = encryptionService;
         }
 
         public class Settings : CommandSettings
@@ -26,7 +26,7 @@ namespace MyCrypt.Commands
             [Description("Output path for encrypted file.")]
             public string? Output { get; init; }
 
-            [CommandOption("-k|--key [STRING]")]
+            [CommandOption("-k|--key [VALUE]")]
             [Description("Key used to encrypt the file. (Default: New random 32 bytes key)")]
             public required FlagValue<string> Key { get; init; }
 
@@ -40,11 +40,18 @@ namespace MyCrypt.Commands
             byte[] key;
             if (!settings.Key.IsSet)
             {
-                key = _aesUtilService.GenerateRandomKey();
+                key = _encryptionService.GenerateRandomKey();
             }
             else
             {
-                key = _aesUtilService.ParseKey(settings.Key.Value);
+                if (File.Exists(settings.Key.Value))
+                {
+                    key = KeyManagementService.ImportKey(settings.Key.Value);
+                }
+                else
+                {
+                    key = _encryptionService.ParseKey(settings.Key.Value);
+                }
             }
 
             if (!settings.Input.Exists)
@@ -72,7 +79,7 @@ namespace MyCrypt.Commands
                            .Spinner(Spinner.Known.Dots)
                            .Start("Encrypting file...", async ctx =>
                            {
-                               _aesUtilService.EncryptFile(input, output, key, inputExtension);
+                               _encryptionService.EncryptFile(input, output, key, inputExtension);
                            });
 
                 input.Close();

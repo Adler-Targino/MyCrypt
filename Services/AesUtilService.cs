@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MyCrypt.Services
 {
-    internal class AesUtilService : IAesUtilService
+    internal class AesUtilService : IEncryptionService
     {
         private readonly IRngService _rngService;
         private static readonly int[] AesValidStringKeySizes = { 24, 32, 44 };

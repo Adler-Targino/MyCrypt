@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MyCrypt.Interfaces
 {
-    internal interface IAesUtilService
+    internal interface IEncryptionService
     {
         byte[] GenerateRandomKey();
         byte[] ParseKey(string key);        
