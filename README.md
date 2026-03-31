@@ -88,8 +88,9 @@ MyCrypt is built using Spectre.Console.Cli, and has fully a functional help tag 
 
 # What's next?
 MyCrypt is a hobby project, so new functionalities might take some time to come. But there are a few things already on radar for the next versions, such as:
+- [X] Importing/Exporting Keys as files
+- [ ] File validation on decryption. (Currently working on that) 
 - [ ] New encryption Algorithms
-- [ ] Importing/Exporting Keys as files
 - [ ] Asymmetric encryption
 
 Feel free to share or contribute with this repo, just try to keep it simple.
