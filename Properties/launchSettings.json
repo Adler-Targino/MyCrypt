@@ -2,7 +2,7 @@
   "profiles": {
     "MyCrypt": {
       "commandName": "Project",
-      "commandLineArgs": "key generate"
+      "commandLineArgs": "encrypt --help"
     }
   }
 }

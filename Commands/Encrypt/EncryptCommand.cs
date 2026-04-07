@@ -1,8 +1,11 @@
 ﻿using MyCrypt.Interfaces;
+using MyCrypt.Models;
 using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MyCrypt.Commands
@@ -26,9 +29,15 @@ namespace MyCrypt.Commands
             [Description("Output path for encrypted file.")]
             public string? Output { get; init; }
 
-            [CommandOption("-k|--key [VALUE]")]
-            [Description("Key used to encrypt the file. (Default: New random 32 bytes key)")]
+            [CommandOption("-k|--key <VALUE>")]
+            [Description("Key used to encrypt the file.")]
+            [DefaultValue("New random 32 bytes key")]
             public required FlagValue<string> Key { get; init; }
+
+            [CommandOption("-m|--mac <MAC>")]
+            [Description("Message authentication code algorithm. (HMAC-SHA256 | None)")]
+            [DefaultValue("HMAC-SHA256")]
+            public string Mac { get; init; } = "HMAC-SHA256";
 
             [CommandOption("-d|--delete")]
             [Description("Deletes the original file after encryption.")]
@@ -37,7 +46,15 @@ namespace MyCrypt.Commands
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            EncryptedFileHeader fileHeader = new EncryptedFileHeader();                
+            fileHeader.Version = (byte)(Assembly.GetEntryAssembly()?.GetName().Version?.Major ?? 1);
+            fileHeader.Flags = CryptoFlags.None;
+            fileHeader.Flags |= CryptoFlags.Hmac;
+            fileHeader.Encryption = EncryptionType.Aes;
+            fileHeader.Compression = CompressionType.None;
+
             byte[] key;
+
             if (!settings.Key.IsSet)
             {
                 key = _encryptionService.GenerateRandomKey();
@@ -54,14 +71,29 @@ namespace MyCrypt.Commands
                 }
             }
 
+            switch (settings.Mac.ToLowerInvariant())
+            {
+                case "none":
+                    fileHeader.Mac = MacType.None; 
+                    break;
+                case "hmac-sha256":
+                    fileHeader.Mac = MacType.HmacSha256;
+                    break;
+                default:
+                    AnsiConsole.MarkupLine($"Unsuported MAC: [yellow]'{settings.Mac}'[/]");
+                return 0;
+            }
+
             if (!settings.Input.Exists)
             {
                 throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
             }
 
-            string inputExtension = settings.Input.Extension;
+            string inputExtension = settings.Input.Extension;            
             string outputFilename = PathResolverService.ResolveEncryptedFileName(settings.Input, settings.Output);
-            
+
+            fileHeader.ExtensionBytes = Encoding.UTF8.GetBytes(inputExtension);
+
             if (File.Exists(outputFilename))
             {
                 if (!AnsiConsole.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
@@ -79,7 +111,7 @@ namespace MyCrypt.Commands
                            .Spinner(Spinner.Known.Dots)
                            .Start("Encrypting file...", async ctx =>
                            {
-                               _encryptionService.EncryptFile(input, output, key, inputExtension);
+                               _encryptionService.EncryptFile(input, output, key, fileHeader);
                            });
 
                 input.Close();

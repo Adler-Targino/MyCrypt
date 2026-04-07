@@ -17,7 +17,8 @@ namespace MyCrypt.Commands
         public class Settings : CommandSettings
         {
             [CommandOption("-t|--type <STRING>")]
-            [Description("Key pair type to be created. (Default: AES)")]
+            [Description("Key pair type to be created.")]
+            [DefaultValue("AES")]
             public string? KeyType { get; init; } = "aes";
 
             [CommandOption("-e|--export [PATH]")]

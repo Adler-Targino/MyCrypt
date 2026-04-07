@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyCrypt.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,21 +21,10 @@ namespace MyCrypt.Services
         public static string ResolveDecryptedtFileName(FileInfo input, string? output)
         {
             using var inputStream = input.OpenRead();
-            byte[] magic = new byte[4];
-            inputStream.ReadExactly(magic);
-
-            if (Encoding.ASCII.GetString(magic) != "MYCR")
-                throw new InvalidDataException("Invalid MyCrypt file.");
-
-            int extLength = inputStream.ReadByte();
-            if (extLength < 0)
-                throw new EndOfStreamException("Invalid MyCrypt file.");
-            byte[] extBytes = new byte[extLength];
-            inputStream.ReadExactly(extBytes);
-
+            EncryptedFileHeader fileHeader = EncryptedFileHeader.ReadHeaderFromStream(inputStream);
             inputStream.Close();
 
-            string extension = Encoding.UTF8.GetString(extBytes);
+            string extension = Encoding.UTF8.GetString(fileHeader.ExtensionBytes);
 
             return !string.IsNullOrWhiteSpace(output) ?
                            Path.IsPathRooted(output) ?
@@ -44,6 +34,7 @@ namespace MyCrypt.Services
                                 extension) :
                            Path.ChangeExtension(input.FullName, extension);
         }
+
         public static string ResolveKeyFileName(string output)
         {
             return Path.IsPathRooted(output) ?

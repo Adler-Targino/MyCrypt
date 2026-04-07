@@ -1,4 +1,6 @@
-﻿using MyCrypt.Interfaces;
+﻿using MyCrypt.Helpers;
+using MyCrypt.Interfaces;
+using MyCrypt.Models;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -17,12 +19,41 @@ namespace MyCrypt.Services
 
         public void DecryptFile(Stream input, Stream output, byte[] key)
         {
+            EncryptedFileHeader fileHeader = EncryptedFileHeader.ReadHeaderFromStream(input);
+            long dataStartPosition = input.Position;
+            int macSize = EncryptedFileHeader.GetMacLength(fileHeader.Mac);
+
+            //HMAC VALIDATION
+            if (fileHeader.Mac != MacType.None)
+            {
+                input.Position = 0;
+                long contentSize = input.Length - macSize;
+
+                byte[] hmac = new byte[0];
+                switch (fileHeader.Mac)
+                {
+                    case MacType.HmacSha256:
+                        hmac = ShaUtilService.HashHMACSHA256(key, input, contentSize);
+                        break;
+                }
+
+                byte[] storedHmac = new byte[macSize];
+                input.ReadExactly(storedHmac);
+
+                if(!CryptographicOperations.FixedTimeEquals(hmac, storedHmac))
+                    throw new CryptographicException("HMAC validation failed. The file may be corrupted or the key is incorrect.");
+
+                input.Position = dataStartPosition;
+            }
+
+            //DATA DECOMPRESSION
+
+
+            //DECRYPTION
             using (Aes aes = Aes.Create())
             {
-                input.Seek(4, SeekOrigin.Current);
-
-                int extLength = input.ReadByte();
-                input.Seek(extLength, SeekOrigin.Current);
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
 
                 byte[] iv = new byte[aes.BlockSize / 8];
                 input.ReadExactly(iv);
@@ -30,30 +61,57 @@ namespace MyCrypt.Services
                 aes.Key = key;
                 aes.IV = iv;
 
-                using var crypto = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+                long encryptedDataSize = input.Length - input.Position - macSize;
 
-                crypto.CopyTo(output);
+                using var crypto = new CryptoStream(output, aes.CreateDecryptor(), CryptoStreamMode.Write);
+
+                StreamHelper.ReadBuffered(input, encryptedDataSize, (buffer, read) =>
+                {
+                    crypto.Write(buffer, 0, read);
+                });
+
+                crypto.FlushFinalBlock();
             }
         }
 
-        public void EncryptFile(Stream input, Stream output, byte[] key, string extension)
+        public void EncryptFile(Stream input, Stream output, byte[] key, EncryptedFileHeader fileHeader)
         {
-            var extBytes = Encoding.UTF8.GetBytes(extension);
+            // WRITE HEADER
+            EncryptedFileHeader.WriteHeaderToStream(fileHeader, output);            
 
-            output.Write(Encoding.ASCII.GetBytes("MYCR"));
-            output.WriteByte((byte)extBytes.Length);
-            output.Write(extBytes);
-
+            //DATA ENCRYPTION
             using (Aes aes = Aes.Create())
             {
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+
                 aes.Key = key;
                 byte[] iv = aes.IV;
 
                 output.Write(iv, 0, iv.Length);
 
-                using var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                using var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
 
                 input.CopyTo(crypto);
+            }
+
+            //DATA COMPRESSION
+
+            //HMAC
+            if(fileHeader.Mac != MacType.None)
+            {
+                output.Position = 0;
+
+                byte[] hmac = new byte[0];
+                switch (fileHeader.Mac)
+                {
+                    case MacType.HmacSha256:
+                        hmac = ShaUtilService.HashHMACSHA256(key, output, output.Length);
+                        break;
+                }
+
+                output.Position = output.Length;
+                output.Write(hmac);
             }
         }
 
