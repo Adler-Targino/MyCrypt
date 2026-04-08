@@ -1,4 +1,5 @@
-﻿using MyCrypt.Interfaces;
+﻿using MyCrypt.Helpers;
+using MyCrypt.Interfaces;
 using MyCrypt.Models;
 using MyCrypt.Services;
 using Spectre.Console;
@@ -29,7 +30,7 @@ namespace MyCrypt.Commands
             [Description("Output path for encrypted file.")]
             public string? Output { get; init; }
 
-            [CommandOption("-k|--key <VALUE>")]
+            [CommandOption("-k|--key [VALUE]")]
             [Description("Key used to encrypt the file.")]
             [DefaultValue("New random 32 bytes key")]
             public required FlagValue<string> Key { get; init; }
@@ -46,10 +47,7 @@ namespace MyCrypt.Commands
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
-            EncryptedFileHeader fileHeader = new EncryptedFileHeader();                
-            fileHeader.Version = (byte)(Assembly.GetEntryAssembly()?.GetName().Version?.Major ?? 1);
-            fileHeader.Flags = CryptoFlags.None;
-            fileHeader.Flags |= CryptoFlags.Hmac;
+            EncryptedFileHeader fileHeader = new EncryptedFileHeader();
             fileHeader.Encryption = EncryptionType.Aes;
             fileHeader.Compression = CompressionType.None;
 
@@ -63,7 +61,7 @@ namespace MyCrypt.Commands
             {
                 if (File.Exists(settings.Key.Value))
                 {
-                    key = KeyManagementService.ImportKey(settings.Key.Value);
+                    key = EncryptionKeyFile.ImportKey(settings.Key.Value, EncryptionType.Aes);
                 }
                 else
                 {
@@ -90,7 +88,7 @@ namespace MyCrypt.Commands
             }
 
             string inputExtension = settings.Input.Extension;            
-            string outputFilename = PathResolverService.ResolveEncryptedFileName(settings.Input, settings.Output);
+            string outputFilename = PathResolvingHelper.ResolveEncryptedFileName(settings.Input, settings.Output);
 
             fileHeader.ExtensionBytes = Encoding.UTF8.GetBytes(inputExtension);
 

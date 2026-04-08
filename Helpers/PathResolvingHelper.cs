@@ -1,11 +1,9 @@
 ﻿using MyCrypt.Models;
-using System;
-using System.Collections.Generic;
 using System.Text;
 
-namespace MyCrypt.Services
+namespace MyCrypt.Helpers
 {
-    internal static class PathResolverService
+    internal static class PathResolvingHelper
     {
         public static string ResolveEncryptedFileName(FileInfo input, string? output)
         {

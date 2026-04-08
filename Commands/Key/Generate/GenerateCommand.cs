@@ -1,4 +1,6 @@
-﻿using MyCrypt.Interfaces;
+﻿using MyCrypt.Helpers;
+using MyCrypt.Interfaces;
+using MyCrypt.Models;
 using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -29,9 +31,11 @@ namespace MyCrypt.Commands
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             byte[] key;
+            EncryptionType encryption;
             switch (settings.KeyType!.ToLowerInvariant())
             {
                 case "aes":
+                    encryption = EncryptionType.Aes;
                     key = _aesUtilService.GenerateRandomKey();
                     break;
                 default:
@@ -44,11 +48,11 @@ namespace MyCrypt.Commands
 
             if (settings.Export.IsSet)
             {
-                string path = PathResolverService.ResolveKeyFileName(
+                string path = PathResolvingHelper.ResolveKeyFileName(
                     !string.IsNullOrWhiteSpace(settings.Export.Value) ? settings.Export.Value :
                     $"mycrypt-key-{settings.KeyType.ToLowerInvariant()}-{DateTime.Now:yyyyMMdd-HHmmss}");
 
-                KeyManagementService.ExportKey(key, path);
+                EncryptionKeyFile.ExportKey(key, encryption, path);
 
                 AnsiConsole.MarkupLine($"Key exported to file: " +
                 $"[yellow]{path}[/]");

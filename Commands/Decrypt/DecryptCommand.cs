@@ -1,4 +1,6 @@
-﻿using MyCrypt.Interfaces;
+﻿using MyCrypt.Helpers;
+using MyCrypt.Interfaces;
+using MyCrypt.Models;
 using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -40,7 +42,7 @@ namespace MyCrypt.Commands
 
             if (File.Exists(settings.Key))
             {
-                key = KeyManagementService.ImportKey(settings.Key);
+                key = EncryptionKeyFile.ImportKey(settings.Key, EncryptionType.Aes);
             }
             else
             {
@@ -52,7 +54,7 @@ namespace MyCrypt.Commands
                 throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
             }
 
-            string outputFilename = PathResolverService.ResolveDecryptedtFileName(settings.Input, settings.Output);
+            string outputFilename = PathResolvingHelper.ResolveDecryptedtFileName(settings.Input, settings.Output);
 
             if (File.Exists(outputFilename))
             {

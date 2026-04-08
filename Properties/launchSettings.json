@@ -2,7 +2,7 @@
   "profiles": {
     "MyCrypt": {
       "commandName": "Project",
-      "commandLineArgs": "encrypt --help"
+      "commandLineArgs": "encrypt .\\test.txt --key .\\mycrypt-key-aes-20260408-164611.myk"
     }
   }
 }
