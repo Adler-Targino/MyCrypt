@@ -8,18 +8,17 @@ using System.Text;
 
 namespace MyCrypt.Services
 {
-    internal class AesUtilService : IEncryptionService
+    internal class AesEncryptionService : IEncryptionService
     {
         private readonly IRngService _rngService;
         private static readonly int[] AesValidStringKeySizes = { 24, 32, 44 };
-        public AesUtilService(IRngService rngService)
+        public AesEncryptionService(IRngService rngService)
         {
             _rngService = rngService;
         }
 
-        public void DecryptFile(Stream input, Stream output, byte[] key)
+        public void DecryptFile(Stream input, Stream output, byte[] key, EncryptedFileHeader fileHeader)
         {
-            EncryptedFileHeader fileHeader = EncryptedFileHeader.ReadHeaderFromStream(input);
             long dataStartPosition = input.Position;
             int macSize = EncryptedFileHeader.GetMacLength(fileHeader.Mac);
 
@@ -29,13 +28,11 @@ namespace MyCrypt.Services
                 input.Position = 0;
                 long contentSize = input.Length - macSize;
 
-                byte[] hmac = new byte[0];
-                switch (fileHeader.Mac)
+                byte[] hmac = fileHeader.Mac switch
                 {
-                    case MacType.HmacSha256:
-                        hmac = ShaUtilService.HashHMACSHA256(key, input, contentSize);
-                        break;
-                }
+                    MacType.HMACSHA256 => ShaUtilService.HashHMACSHA256(key, input, contentSize),
+                    _ => new byte[0]
+                };
 
                 byte[] storedHmac = new byte[macSize];
                 input.ReadExactly(storedHmac);
@@ -105,7 +102,7 @@ namespace MyCrypt.Services
                 byte[] hmac = new byte[0];
                 switch (fileHeader.Mac)
                 {
-                    case MacType.HmacSha256:
+                    case MacType.HMACSHA256:
                         hmac = ShaUtilService.HashHMACSHA256(key, output, output.Length);
                         break;
                 }

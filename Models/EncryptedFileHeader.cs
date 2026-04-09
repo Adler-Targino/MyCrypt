@@ -60,13 +60,11 @@ namespace MyCrypt.Models
 
         public static int GetMacLength(MacType mac)
         {
-            switch (mac)
+            return mac switch
             {
-                case MacType.HmacSha256:
-                    return 32;
-                default:
-                    return 0;
-            }
+                MacType.HMACSHA256 => 32,
+                _ => 0
+            };
         }
     }    
 }

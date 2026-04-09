@@ -18,6 +18,6 @@ namespace MyCrypt.Models
     public enum MacType : byte
     {
         None = 0,
-        HmacSha256 = 1,
+        HMACSHA256 = 1,
     }
 }

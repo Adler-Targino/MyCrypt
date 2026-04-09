@@ -10,6 +10,6 @@ namespace MyCrypt.Interfaces
         byte[] GenerateRandomKey();
         byte[] ParseKey(string key);
         void EncryptFile(Stream input, Stream output, byte[] key, EncryptedFileHeader fileHeader);
-        void DecryptFile(Stream input, Stream output, byte[] key);
+        void DecryptFile(Stream input, Stream output, byte[] key, EncryptedFileHeader fileHeader);
     }
 }

@@ -14,10 +14,10 @@ namespace MyCrypt.Commands
     [Description("Encrypts a file using a cryptographic key.")]
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
-        private readonly IEncryptionService _encryptionService;
-        public EncryptCommand(IEncryptionService encryptionService)
+        private readonly IEncryptionServiceFactory _factory;
+        public EncryptCommand(IEncryptionServiceFactory factory)
         {
-            _encryptionService = encryptionService;
+            _factory = factory;
         }
 
         public class Settings : CommandSettings
@@ -25,10 +25,15 @@ namespace MyCrypt.Commands
             [CommandArgument(0, "<FILE>")]
             [Description("Content to be encrypted.")]
             public required FileInfo Input { get; init; }
-            
+
             [CommandOption("-o|--output <PATH>")]
             [Description("Output path for encrypted file.")]
             public string? Output { get; init; }
+
+            [CommandOption("-a|--algorithm <ENCRYPTION>")]
+            [Description("Encryption algorithm. (AES)")]
+            [DefaultValue("AES")]
+            public string Algorithm { get; init; } = "AES";
 
             [CommandOption("-k|--key [VALUE]")]
             [Description("Key used to encrypt the file.")]
@@ -36,9 +41,9 @@ namespace MyCrypt.Commands
             public required FlagValue<string> Key { get; init; }
 
             [CommandOption("-m|--mac <MAC>")]
-            [Description("Message authentication code algorithm. (HMAC-SHA256 | None)")]
-            [DefaultValue("HMAC-SHA256")]
-            public string Mac { get; init; } = "HMAC-SHA256";
+            [Description("Message authentication code algorithm. (HMACSHA256 | None)")]
+            [DefaultValue("HMACSHA256")]
+            public string Mac { get; init; } = "HMACSHA256";
 
             [CommandOption("-d|--delete")]
             [Description("Deletes the original file after encryption.")]
@@ -47,12 +52,24 @@ namespace MyCrypt.Commands
 
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
+            if (!settings.Input.Exists)
+            {
+                throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
+            }
+
             EncryptedFileHeader fileHeader = new EncryptedFileHeader();
-            fileHeader.Encryption = EncryptionType.Aes;
             fileHeader.Compression = CompressionType.None;
 
-            byte[] key;
+            if (!Enum.TryParse<EncryptionType>(settings.Algorithm, true, out var algorithm))
+            {
+                AnsiConsole.MarkupLine($"Unsupported Encryption Algorithm: [yellow]'{settings.Algorithm}'[/]");
+                return 0;
+            }
+            fileHeader.Encryption = algorithm;
 
+            IEncryptionService _encryptionService = _factory.Create(algorithm);
+
+            byte[] key;
             if (!settings.Key.IsSet)
             {
                 key = _encryptionService.GenerateRandomKey();
@@ -69,25 +86,14 @@ namespace MyCrypt.Commands
                 }
             }
 
-            switch (settings.Mac.ToLowerInvariant())
+            if (!Enum.TryParse<MacType>(settings.Mac, true, out var macType))
             {
-                case "none":
-                    fileHeader.Mac = MacType.None; 
-                    break;
-                case "hmac-sha256":
-                    fileHeader.Mac = MacType.HmacSha256;
-                    break;
-                default:
-                    AnsiConsole.MarkupLine($"Unsuported MAC: [yellow]'{settings.Mac}'[/]");
+                AnsiConsole.MarkupLine($"Unsupported MAC: [yellow]'{settings.Mac}'[/]");
                 return 0;
             }
+            fileHeader.Mac = macType;
 
-            if (!settings.Input.Exists)
-            {
-                throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
-            }
-
-            string inputExtension = settings.Input.Extension;            
+            string inputExtension = settings.Input.Extension;
             string outputFilename = PathResolvingHelper.ResolveEncryptedFileName(settings.Input, settings.Output);
 
             fileHeader.ExtensionBytes = Encoding.UTF8.GetBytes(inputExtension);
@@ -112,8 +118,8 @@ namespace MyCrypt.Commands
                                _encryptionService.EncryptFile(input, output, key, fileHeader);
                            });
 
-                input.Close();
-                output.Close();
+                input.Dispose();
+                output.Dispose();
             }
             catch (Exception ex)
             {
@@ -121,7 +127,7 @@ namespace MyCrypt.Commands
                 return 0;
             }
 
-            if (settings.DeleteOriginal) 
+            if (settings.DeleteOriginal)
             {
                 settings.Input.Delete();
             }

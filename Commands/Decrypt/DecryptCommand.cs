@@ -5,16 +5,17 @@ using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
+using System.Security.Cryptography;
 
 namespace MyCrypt.Commands
 {
     [Description("Decrypts a previously encrypted .myc file.")]
     internal class DecryptCommand : Command<DecryptCommand.Settings>
     {
-        private readonly IEncryptionService _encryptionService;
-        public DecryptCommand(IEncryptionService encryptionService)
+        private readonly IEncryptionServiceFactory _factory;
+        public DecryptCommand(IEncryptionServiceFactory factory)
         {
-            _encryptionService = encryptionService;
+            _factory = factory;
         }
 
         public class Settings : CommandSettings
@@ -38,21 +39,26 @@ namespace MyCrypt.Commands
         }
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
-            byte[] key;
+            if (!settings.Input.Exists)
+            {
+                throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
+            }
 
+            using var input = settings.Input.OpenRead();
+
+            EncryptedFileHeader fileHeader = EncryptedFileHeader.ReadHeaderFromStream(input);
+            IEncryptionService _encryptionService = _factory.Create(fileHeader.Encryption);
+
+            byte[] key;
             if (File.Exists(settings.Key))
             {
-                key = EncryptionKeyFile.ImportKey(settings.Key, EncryptionType.Aes);
+                key = EncryptionKeyFile.ImportKey(settings.Key, fileHeader.Encryption);
             }
             else
             {
                 key = _encryptionService.ParseKey(settings.Key);
             }
 
-            if (!settings.Input.Exists)
-            {
-                throw new FileNotFoundException($"Input file not found: {settings.Input.FullName}");
-            }
 
             string outputFilename = PathResolvingHelper.ResolveDecryptedtFileName(settings.Input, settings.Output);
 
@@ -66,18 +72,17 @@ namespace MyCrypt.Commands
 
             try
             {
-                using var input = settings.Input.OpenRead();
                 using var output = File.Create(outputFilename);
 
                 AnsiConsole.Status()
                            .Spinner(Spinner.Known.Dots)
                            .Start("Decrypting file...", async ctx =>
                            {
-                               _encryptionService.DecryptFile(input, output, key);
+                               _encryptionService.DecryptFile(input, output, key, fileHeader);
                            });
 
-                input.Close();
-                output.Close();
+                input.Dispose();
+                output.Dispose();
             }
             catch (Exception ex)
             {

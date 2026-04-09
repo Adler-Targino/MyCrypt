@@ -2,7 +2,7 @@
   "profiles": {
     "MyCrypt": {
       "commandName": "Project",
-      "commandLineArgs": "encrypt .\\test.txt --key .\\mycrypt-key-aes-20260408-164611.myk"
+      "commandLineArgs": "decrypt C:\\Users\\adler\\source\\repos\\MyCrypt\\MyCrypt\\Test.myc 3RMM45XpDpOlXlT9XmnCG2SyDad4pGutj2cx+i9qE5g= -o C:\\Users\\adler\\source\\repos\\MyCrypt\\MyCrypt\\TestDec.txt"
     }
   }
 }
