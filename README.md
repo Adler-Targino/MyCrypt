@@ -12,12 +12,13 @@ MyCrypt is a command-line interface (CLI) tool built with .NET for encrypting, d
 ## Features
 - File encryption
 - File decryption
-- File integrity validation using hash
+- Cryptographic Key Exporting
+- File integrity validation
 
 ## Technologies used
 - Built with .NET
-- Supports AES Encryption/Decryption
-- SHA256 & SHA384 Hashing
+- Supports AES Encryption/Decryption (More to come)
+- SHA Hashing & Hmac validation
   
 ## Usage
 Once you properly set up the aplication, you will be able to perform the following operations:
@@ -31,8 +32,10 @@ Once ran, a random 32 bytes (44 characters) long, random key is displayed at the
 
 **Options:**
 
-- `-k|--key` Defines a key which will be used for encryption. (If not present, a random key is created to encrypt your file)
+- `-a|--algorithm` Defines the encryption algorithm to be used. Default: AES
+- `-k|--key` Defines a key which will be used for encryption, it can be a text key or a file containing the key. (If not present, a random key is created to encrypt your file)
 - `-o|--output` Defines the output path of the encrypted file. (By default the output is in the same folder as the input file)
+- `-m|--mac` Defines the message authentication code algorithm (HMACSHA256 | None). Default: HMACSHA256
 - `-d|--delete` Deletes the original file after encryption.
 
 **Example**
@@ -64,8 +67,35 @@ mycrypt decrypt .\top-secret.myc my-secret-key --output file -d
 ```
 Running the above command decrypts your `top-secret.myc` file back into `file.txt` while deleting the encrypted file.
 
+### Key Generation
+The encrypt command already has built in key generation when you don't specify a key to be used. 
+But in some cases you just want to create a random key before starting to encrypt your files.
+
+In that case you can use the following command.
+```
+mycrypt key generate
+```
+
+**Options:**
+
+- `-t|--type` Type of the key that is going to be generated. Default: AES
+- `-e|--export` Exports the key to a `.myk` file in the specified path. 
+(The file is accepted as a key for both the encrypt and decrypt commands)
+
+**Example**
+```
+mycrypt key generate --export my-secret-key
+```
+A random key will be generated. And exported to the file `my-secret-key.myk`
+
+Note: Differently from the encrypt command where a hash is created to be used 
+as a key depending on your input having or not a valid lenght, the `key generate` command
+will **_always_** generate a random key, independently of any input.
+
 ### File validation
-Assuming you are planning on sharing your encrypted files with someone it is a good pratice to validate the files to ensure file integrity. For that reason, MyCrypt has built in file validation which can be done by the following commands.
+If you are planning on sharing your encrypted files with someone it is a good pratice to validate them to ensure file integrity. For that reason, MyCrypt has built in file validation using HMAC.
+
+But it's also possible to add an extra layer of validation, or even validate non encrypted files before sending them by using the following commands.
 
 **ComputeHash**  
 Command that computes the cryptographic hash of a file (By default using SHA384) 
@@ -87,14 +117,20 @@ MyCrypt is built using Spectre.Console.Cli, and has fully a functional help tag 
 ---
 
 # What's next?
-MyCrypt is a hobby project, so new functionalities might take some time to come. But there are a few things already on radar for the next versions, such as:
+MyCrypt is a hobby project, so new functionalities might take some time to come. 
+But there are a few things already on radar for the next versions, such as:
 - [X] Importing/Exporting Keys as files
 - [X] File validation on decryption.
 - [ ] File Compression.
 - [ ] New encryption Algorithms
 - [ ] Asymmetric encryption
 
-Feel free to share or contribute with this repo, just try to keep it simple.
+## When an official release is coming?
+Once the project has all the initial ideas implemented. (Encryption, Validation, Compression). 
+And a proper testing flux is added, it won't take long to release. I just want to make sure everything is working as intended before making an official release.
 
+## And finally...
 If you've come so far as reading this, thank you for your time!
+
+Feel free to share or contribute with this repo, just try to keep it simple.
 
