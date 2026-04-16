@@ -122,9 +122,9 @@ MyCrypt is a hobby project, so new functionalities might take some time to come.
 But there are a few things already on radar for the next versions, such as:
 - [X] Importing/Exporting Keys as files
 - [X] File validation on decryption.
-- [ ] File Compression.
+- [X] File Compression.
 - [ ] New encryption Algorithms
-- [ ] Asymmetric encryption
+- [ ] New compression Algorithms
 
 ## When an official release is coming?
 Once the project has all the initial ideas implemented. (Encryption, Validation, Compression). 
