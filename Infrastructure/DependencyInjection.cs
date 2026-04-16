@@ -12,8 +12,12 @@ namespace MyCrypt.Infrastructure
             // Encryption services
             services.AddSingleton<AesEncryptionService>();
 
+            //Compression services
+            services.AddSingleton<GZipCompressionService>();
+
             services.AddSingleton<IRngService, RngService>();
             services.AddSingleton<IEncryptionServiceFactory, EncryptionServiceFactory>();
+            services.AddSingleton<ICompressionServiceFactory, CompressionServiceFactory>();
             
             return services;
         }

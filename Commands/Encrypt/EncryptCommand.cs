@@ -35,6 +35,11 @@ namespace MyCrypt.Commands
             [DefaultValue("AES")]
             public string Algorithm { get; init; } = "AES";
 
+            [CommandOption("-c|--compression <COMPRESSION>")]
+            [Description("Compression algorithm. (None | GZip)")]
+            [DefaultValue("None")]
+            public string Compression { get; init; } = "None";
+
             [CommandOption("-k|--key [VALUE]")]
             [Description("Key used to encrypt the file.")]
             [DefaultValue("New random 32 bytes key")]
@@ -58,7 +63,13 @@ namespace MyCrypt.Commands
             }
 
             EncryptedFileHeader fileHeader = new EncryptedFileHeader();
-            fileHeader.Compression = CompressionType.None;
+            
+            if (!Enum.TryParse<CompressionType>(settings.Compression, true, out var compression))
+            {
+                AnsiConsole.MarkupLine($"Unsupported Compression Algorithm: [yellow]'{settings.Compression}'[/]");
+                return 0;
+            }
+            fileHeader.Compression = compression;
 
             if (!Enum.TryParse<EncryptionType>(settings.Algorithm, true, out var algorithm))
             {

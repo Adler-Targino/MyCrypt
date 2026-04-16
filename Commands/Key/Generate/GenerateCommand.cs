@@ -10,10 +10,10 @@ namespace MyCrypt.Commands
 {
     internal class GenerateCommand : Command<GenerateCommand.Settings>
     {
-        private readonly IEncryptionService _aesUtilService;
-        public GenerateCommand(IEncryptionService aesUtilService)
+        private readonly IEncryptionServiceFactory _factory;
+        public GenerateCommand(IEncryptionServiceFactory factory)
         {
-            _aesUtilService = aesUtilService;
+            _factory = factory;
         }
 
         public class Settings : CommandSettings
@@ -21,7 +21,7 @@ namespace MyCrypt.Commands
             [CommandOption("-t|--type <STRING>")]
             [Description("Key pair type to be created.")]
             [DefaultValue("AES")]
-            public string? KeyType { get; init; } = "aes";
+            public string? KeyType { get; init; } = "AES";
 
             [CommandOption("-e|--export [PATH]")]
             [Description("Exports the generated key into a file.")]
@@ -31,17 +31,15 @@ namespace MyCrypt.Commands
         public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
         {
             byte[] key;
-            EncryptionType encryption;
-            switch (settings.KeyType!.ToLowerInvariant())
+
+            if (!Enum.TryParse<EncryptionType>(settings.KeyType, true, out var algorithm))
             {
-                case "aes":
-                    encryption = EncryptionType.Aes;
-                    key = _aesUtilService.GenerateRandomKey();
-                    break;
-                default:
-                    AnsiConsole.MarkupLine($"Unsuported type: [yellow]'{settings.KeyType}'[/]");
-                    return 0;
+                AnsiConsole.MarkupLine($"Unsupported type: [yellow]'{settings.KeyType}'[/]");
+                return 0;
             }
+
+            IEncryptionService _encryptionService = _factory.Create(algorithm);
+            key = _encryptionService.GenerateRandomKey();
 
             AnsiConsole.MarkupLine($"{settings.KeyType.ToUpperInvariant()} Key successfully generated: " +
                 $"[yellow]{Convert.ToBase64String(key)}[/]");
@@ -52,7 +50,7 @@ namespace MyCrypt.Commands
                     !string.IsNullOrWhiteSpace(settings.Export.Value) ? settings.Export.Value :
                     $"mycrypt-key-{settings.KeyType.ToLowerInvariant()}-{DateTime.Now:yyyyMMdd-HHmmss}");
 
-                EncryptionKeyFile.ExportKey(key, encryption, path);
+                EncryptionKeyFile.ExportKey(key, algorithm, path);
 
                 AnsiConsole.MarkupLine($"Key exported to file: " +
                 $"[yellow]{path}[/]");

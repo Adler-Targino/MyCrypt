@@ -33,6 +33,7 @@ Once ran, a random 32 bytes (44 characters) long, random key is displayed at the
 **Options:**
 
 - `-a|--algorithm` Defines the encryption algorithm to be used. Default: AES
+- `-c|--compression` Defines the compression algorithm to be used. Default: None
 - `-k|--key` Defines a key which will be used for encryption, it can be a text key or a file containing the key. (If not present, a random key is created to encrypt your file)
 - `-o|--output` Defines the output path of the encrypted file. (By default the output is in the same folder as the input file)
 - `-m|--mac` Defines the message authentication code algorithm (HMACSHA256 | None). Default: HMACSHA256

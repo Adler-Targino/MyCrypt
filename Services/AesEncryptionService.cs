@@ -11,10 +11,12 @@ namespace MyCrypt.Services
     internal class AesEncryptionService : IEncryptionService
     {
         private readonly IRngService _rngService;
+        private readonly ICompressionServiceFactory _factory;
         private static readonly int[] AesValidStringKeySizes = { 24, 32, 44 };
-        public AesEncryptionService(IRngService rngService)
+        public AesEncryptionService(IRngService rngService, ICompressionServiceFactory factory)
         {
             _rngService = rngService;
+            _factory = factory;
         }
 
         public void DecryptFile(Stream input, Stream output, byte[] key, EncryptedFileHeader fileHeader)
@@ -43,9 +45,6 @@ namespace MyCrypt.Services
                 input.Position = dataStartPosition;
             }
 
-            //DATA DECOMPRESSION
-
-
             //DECRYPTION
             using (Aes aes = Aes.Create())
             {
@@ -60,14 +59,20 @@ namespace MyCrypt.Services
 
                 long encryptedDataSize = input.Length - input.Position - macSize;
 
-                using var crypto = new CryptoStream(output, aes.CreateDecryptor(), CryptoStreamMode.Write);
+                using var subStream = new SubStream(input, 0, encryptedDataSize);
+                using var crypto = new CryptoStream(subStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
 
-                StreamHelper.ReadBuffered(input, encryptedDataSize, (buffer, read) =>
+                // DECOMPRESS AFTER DECRYPT
+                if (fileHeader.Compression != CompressionType.None)
                 {
-                    crypto.Write(buffer, 0, read);
-                });
+                    ICompressionService compressionService = _factory.Create(fileHeader.Compression);
 
-                crypto.FlushFinalBlock();
+                    compressionService.DecompressData(crypto, output);
+                }
+                else
+                {
+                    crypto.CopyTo(output);
+                }
             }
         }
 
@@ -87,25 +92,34 @@ namespace MyCrypt.Services
 
                 output.Write(iv, 0, iv.Length);
 
-                using var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
+                using (var crypto = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true))
+                {
+                    //DATA COMPRESSION BEFORE ENCRYPTION
+                    if (fileHeader.Compression != CompressionType.None)
+                    {
+                        ICompressionService compressionService = _factory.Create(fileHeader.Compression);
 
-                input.CopyTo(crypto);
+                        compressionService.CompressData(input, crypto);
+                    }
+                    else
+                    {
+                        input.CopyTo(crypto);
+                    }
+
+                    crypto.FlushFinalBlock();
+                }
             }
-
-            //DATA COMPRESSION
 
             //HMAC
             if(fileHeader.Mac != MacType.None)
             {
                 output.Position = 0;
 
-                byte[] hmac = new byte[0];
-                switch (fileHeader.Mac)
+                byte[] hmac = fileHeader.Mac switch
                 {
-                    case MacType.HMACSHA256:
-                        hmac = ShaUtilService.HashHMACSHA256(key, output, output.Length);
-                        break;
-                }
+                    MacType.HMACSHA256 => ShaUtilService.HashHMACSHA256(key, output, output.Length),
+                    _ => new byte[0]
+                };
 
                 output.Position = output.Length;
                 output.Write(hmac);

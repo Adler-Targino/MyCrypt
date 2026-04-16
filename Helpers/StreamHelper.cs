@@ -2,7 +2,7 @@
 {
     internal static class StreamHelper
     {
-        private const int DefaultBufferSize = 16384;
+        public const int DefaultBufferSize = 16384;
 
         public static void ReadBuffered(Stream input, long length, Action<byte[], int> onChunk, int bufferSize = DefaultBufferSize)
         {
