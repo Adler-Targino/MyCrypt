@@ -1,12 +1,9 @@
 ﻿using MyCrypt.Helpers;
 using MyCrypt.Interfaces;
 using MyCrypt.Models;
-using MyCrypt.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace MyCrypt.Commands
@@ -67,14 +64,14 @@ namespace MyCrypt.Commands
             if (!Enum.TryParse<CompressionType>(settings.Compression, true, out var compression))
             {
                 AnsiConsole.MarkupLine($"Unsupported Compression Algorithm: [yellow]'{settings.Compression}'[/]");
-                return 0;
+                return 1;
             }
             fileHeader.Compression = compression;
 
             if (!Enum.TryParse<EncryptionType>(settings.Algorithm, true, out var algorithm))
             {
                 AnsiConsole.MarkupLine($"Unsupported Encryption Algorithm: [yellow]'{settings.Algorithm}'[/]");
-                return 0;
+                return 1;
             }
             fileHeader.Encryption = algorithm;
 
@@ -100,7 +97,7 @@ namespace MyCrypt.Commands
             if (!Enum.TryParse<MacType>(settings.Mac, true, out var macType))
             {
                 AnsiConsole.MarkupLine($"Unsupported MAC: [yellow]'{settings.Mac}'[/]");
-                return 0;
+                return 1;
             }
             fileHeader.Mac = macType;
 
@@ -113,7 +110,7 @@ namespace MyCrypt.Commands
             {
                 if (!AnsiConsole.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
                 {
-                    return 0;
+                    return 1;
                 }
             }
 
@@ -135,7 +132,7 @@ namespace MyCrypt.Commands
             catch (Exception ex)
             {
                 Console.WriteLine($"Encryption failed. {ex}");
-                return 0;
+                return 1;
             }
 
             if (settings.DeleteOriginal)

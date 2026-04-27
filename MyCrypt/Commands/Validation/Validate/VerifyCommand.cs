@@ -40,13 +40,13 @@ namespace MyCrypt.Commands
             if (validationResult)
             {
                 AnsiConsole.MarkupLine($"File is [green]valid[/]");
+                return 0;
             }
             else
             {
                 AnsiConsole.MarkupLine($"File is [red]invalid[/]");
+                return 1;
             }
-
-            return 0;
         }
     }
 }

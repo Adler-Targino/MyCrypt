@@ -35,7 +35,7 @@ namespace MyCrypt.Commands
             if (!Enum.TryParse<EncryptionType>(settings.KeyType, true, out var algorithm))
             {
                 AnsiConsole.MarkupLine($"Unsupported type: [yellow]'{settings.KeyType}'[/]");
-                return 0;
+                return 1;
             }
 
             IEncryptionService _encryptionService = _factory.Create(algorithm);

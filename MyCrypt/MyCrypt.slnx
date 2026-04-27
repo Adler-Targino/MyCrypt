@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../MyCrypt.Tests/MyCrypt.Tests.csproj" Id="54844e17-e108-47d5-82c0-ef095e388139" />
+  <Project Path="MyCrypt.csproj" />
+</Solution>

@@ -66,7 +66,7 @@ namespace MyCrypt.Commands
             {
                 if (!AnsiConsole.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
                 {
-                    return 0;
+                    return 1;
                 }
             }
 
@@ -87,7 +87,7 @@ namespace MyCrypt.Commands
             catch (Exception ex)
             {
                 Console.WriteLine($"Decryption failed. {ex}");
-                return 0;
+                return 1;
             }
             
             if (settings.DeleteOriginal)
