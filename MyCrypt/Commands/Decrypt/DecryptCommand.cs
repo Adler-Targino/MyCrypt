@@ -12,10 +12,12 @@ namespace MyCrypt.Commands
     [Description("Decrypts a previously encrypted .myc file.")]
     internal class DecryptCommand : Command<DecryptCommand.Settings>
     {
+        private readonly IAnsiConsole _console;
         private readonly IEncryptionServiceFactory _factory;
-        public DecryptCommand(IEncryptionServiceFactory factory)
+        public DecryptCommand(IEncryptionServiceFactory factory, IAnsiConsole console)
         {
             _factory = factory;
+            _console = console;
         }
 
         public class Settings : CommandSettings
@@ -64,38 +66,41 @@ namespace MyCrypt.Commands
 
             if (File.Exists(outputFilename))
             {
-                if (!AnsiConsole.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
+                if (!_console.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
                 {
                     return 1;
                 }
             }
 
+            using var output = File.Create(outputFilename);
+
             try
             {
-                using var output = File.Create(outputFilename);
-
-                AnsiConsole.Status()
+                _console.Status()
                            .Spinner(Spinner.Known.Dots)
-                           .Start("Decrypting file...", async ctx =>
+                           .Start("Decrypting file...", ctx =>
                            {
                                _encryptionService.DecryptFile(input, output, key, fileHeader);
                            });
-
-                input.Dispose();
-                output.Dispose();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Decryption failed. {ex}");
+                _console.MarkupLine($"[red]Decryption failed.[/] {ex.Message}");
+
+                output.Dispose();
+                if (File.Exists(outputFilename))
+                    File.Delete(outputFilename);
+
                 return 1;
             }
             
             if (settings.DeleteOriginal)
             {
+                input.Dispose();
                 settings.Input.Delete();
             }
 
-            Console.WriteLine("File Decrypted successfully");
+            _console.WriteLine("File Decrypted successfully");
             return 0;
         }
     }

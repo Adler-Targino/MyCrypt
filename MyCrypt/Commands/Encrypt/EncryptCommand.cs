@@ -11,10 +11,12 @@ namespace MyCrypt.Commands
     [Description("Encrypts a file using a cryptographic key.")]
     internal class EncryptCommand : Command<EncryptCommand.Settings>
     {
+        private readonly IAnsiConsole _console;
         private readonly IEncryptionServiceFactory _factory;
-        public EncryptCommand(IEncryptionServiceFactory factory)
+        public EncryptCommand(IEncryptionServiceFactory factory, IAnsiConsole console)
         {
             _factory = factory;
+            _console = console;
         }
 
         public class Settings : CommandSettings
@@ -60,17 +62,17 @@ namespace MyCrypt.Commands
             }
 
             EncryptedFileHeader fileHeader = new EncryptedFileHeader();
-            
+
             if (!Enum.TryParse<CompressionType>(settings.Compression, true, out var compression))
             {
-                AnsiConsole.MarkupLine($"Unsupported Compression Algorithm: [yellow]'{settings.Compression}'[/]");
+                _console.MarkupLine($"Unsupported Compression Algorithm: [yellow]'{settings.Compression}'[/]");
                 return 1;
             }
             fileHeader.Compression = compression;
 
             if (!Enum.TryParse<EncryptionType>(settings.Algorithm, true, out var algorithm))
             {
-                AnsiConsole.MarkupLine($"Unsupported Encryption Algorithm: [yellow]'{settings.Algorithm}'[/]");
+                _console.MarkupLine($"Unsupported Encryption Algorithm: [yellow]'{settings.Algorithm}'[/]");
                 return 1;
             }
             fileHeader.Encryption = algorithm;
@@ -96,7 +98,7 @@ namespace MyCrypt.Commands
 
             if (!Enum.TryParse<MacType>(settings.Mac, true, out var macType))
             {
-                AnsiConsole.MarkupLine($"Unsupported MAC: [yellow]'{settings.Mac}'[/]");
+                _console.MarkupLine($"Unsupported MAC: [yellow]'{settings.Mac}'[/]");
                 return 1;
             }
             fileHeader.Mac = macType;
@@ -108,39 +110,42 @@ namespace MyCrypt.Commands
 
             if (File.Exists(outputFilename))
             {
-                if (!AnsiConsole.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
+                if (!_console.Confirm($"File [yellow]{Path.GetFileName(outputFilename)}[/] already exists. Do you want to [red]Overwrite[/]?"))
                 {
                     return 1;
                 }
             }
 
+            using var input = settings.Input.OpenRead();
+            using var output = File.Create(outputFilename);
+
             try
             {
-                using var input = settings.Input.OpenRead();
-                using var output = File.Create(outputFilename);
-
-                AnsiConsole.Status()
+                _console.Status()
                            .Spinner(Spinner.Known.Dots)
-                           .Start("Encrypting file...", async ctx =>
+                           .Start("Encrypting file...", ctx =>
                            {
                                _encryptionService.EncryptFile(input, output, key, fileHeader);
                            });
-
-                input.Dispose();
-                output.Dispose();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Encryption failed. {ex}");
+                _console.MarkupLine($"[red]Decryption failed.[/] {ex.Message}");
+
+                output.Dispose();
+                if (File.Exists(outputFilename))
+                    File.Delete(outputFilename);
+
                 return 1;
             }
 
             if (settings.DeleteOriginal)
             {
+                input.Dispose();
                 settings.Input.Delete();
             }
 
-            AnsiConsole.MarkupLine($"File encrypted sucessfully with key: [yellow]" +
+            _console.MarkupLine($"File encrypted sucessfully with key: [yellow]" +
                 $"{(settings.Key.IsSet ? settings.Key.Value : Convert.ToBase64String(key))}[/]");
 
             return 0;

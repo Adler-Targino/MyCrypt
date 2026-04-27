@@ -8,7 +8,11 @@ namespace MyCrypt.Commands
     [Description("Computes the cryptographic hash of a file for integrity verification.")]
     internal class ComputeHashCommand : Command<ComputeHashCommand.Settings>
     {
-        public ComputeHashCommand() { }
+        private readonly IAnsiConsole _console;
+        public ComputeHashCommand(IAnsiConsole console) 
+        {
+            _console = console;
+        }
 
         public class Settings : CommandSettings
         {
@@ -22,16 +26,16 @@ namespace MyCrypt.Commands
             string hash = string.Empty;
             var input = settings.Input.OpenRead();
 
-            AnsiConsole.Status()
+            _console.Status()
                        .Spinner(Spinner.Known.Dots)
-                       .Start("Calculating file hash...", async ctx =>
+                       .Start("Calculating file hash...", ctx =>
                        {
                            hash = ShaUtilService.ComputeSHA384(input);
                        });
 
             input.Close();
 
-            AnsiConsole.MarkupLine($"Validation hash for {settings.Input.Name}: [yellow]{hash}[/]");            
+            _console.MarkupLine($"Validation hash for {settings.Input.Name}: [yellow]{hash}[/]");            
 
             return 0;
         }

@@ -10,10 +10,12 @@ namespace MyCrypt.Commands
 {
     internal class GenerateCommand : Command<GenerateCommand.Settings>
     {
+        private readonly IAnsiConsole _console;
         private readonly IEncryptionServiceFactory _factory;
-        public GenerateCommand(IEncryptionServiceFactory factory)
+        public GenerateCommand(IEncryptionServiceFactory factory, IAnsiConsole console)
         {
             _factory = factory;
+            _console = console;
         }
 
         public class Settings : CommandSettings
@@ -34,14 +36,14 @@ namespace MyCrypt.Commands
 
             if (!Enum.TryParse<EncryptionType>(settings.KeyType, true, out var algorithm))
             {
-                AnsiConsole.MarkupLine($"Unsupported type: [yellow]'{settings.KeyType}'[/]");
+                _console.MarkupLine($"Unsupported type: [yellow]'{settings.KeyType}'[/]");
                 return 1;
             }
 
             IEncryptionService _encryptionService = _factory.Create(algorithm);
             key = _encryptionService.GenerateRandomKey();
 
-            AnsiConsole.MarkupLine($"{settings.KeyType.ToUpperInvariant()} Key successfully generated: " +
+            _console.MarkupLine($"{settings.KeyType.ToUpperInvariant()} Key successfully generated: " +
                 $"[yellow]{Convert.ToBase64String(key)}[/]");
 
             if (settings.Export.IsSet)
@@ -52,7 +54,7 @@ namespace MyCrypt.Commands
 
                 EncryptionKeyFile.ExportKey(key, algorithm, path);
 
-                AnsiConsole.MarkupLine($"Key exported to file: " +
+                _console.MarkupLine($"Key exported to file: " +
                 $"[yellow]{path}[/]");
             }
 

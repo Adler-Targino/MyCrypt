@@ -9,7 +9,11 @@ namespace MyCrypt.Commands
     [Description("Validates a file integrity using its hash.")]
     internal class VerifyCommand : Command<VerifyCommand.Settings>
     {
-        public VerifyCommand() { }
+        private readonly IAnsiConsole _console;
+        public VerifyCommand(IAnsiConsole console) 
+        {
+            _console = console;
+        }
 
         public class Settings : CommandSettings
         {
@@ -27,9 +31,9 @@ namespace MyCrypt.Commands
             bool validationResult = false;
             var input = settings.Input.OpenRead();
 
-            AnsiConsole.Status()
+            _console.Status()
                        .Spinner(Spinner.Known.Dots)
-                       .Start("Validating file...", async ctx =>
+                       .Start("Validating file...", ctx =>
                        {
                            validationResult = ShaUtilService.ValidateSHA384(input, settings.Hash);
                        });
@@ -39,12 +43,12 @@ namespace MyCrypt.Commands
 
             if (validationResult)
             {
-                AnsiConsole.MarkupLine($"File is [green]valid[/]");
+                _console.MarkupLine($"File is [green]valid[/]");
                 return 0;
             }
             else
             {
-                AnsiConsole.MarkupLine($"File is [red]invalid[/]");
+                _console.MarkupLine($"File is [red]invalid[/]");
                 return 1;
             }
         }
